@@ -6,7 +6,7 @@
 % else:
   % if 'oauth' in config:
     <b>{{_('login-using')}}</b><br>
-    % for key, service in config.get('oauth', {}).iteritems():
+    % for key, service in config.get('oauth', {}).items():
     <a href='{{service['url'] % service['id']}}'>{{service['name']}}</a>
     % end
   % end

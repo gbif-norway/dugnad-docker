@@ -27,21 +27,22 @@ from bottle_utils.i18n import I18NPlugin, i18n_path, i18n_url, lazy_gettext as _
 #gi.require_version('Vips', '8.0')
 #from gi.repository import Vips
 
-config = yaml.load(open("config.yaml"))
+config = yaml.load(open('config.yaml'), yaml.FullLoader)
 
 bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024 * 16
 
 SESSION = {
     'session.type': 'cookie',
     'session.cookie_expires': 60 * 60 * 24 * 365,
-    'session.encrypt_key': "o(eaji3jgoijeh83",
+    'session.encrypt_key': 'o(eaji3jgoijeh83',
     'session.validate_key': True,
 }
 
 app = bottle.default_app()
 sqlite = bottle.ext.sqlite.Plugin(dbfile='dugnad.db')
 app.install(sqlite)
-app = I18NPlugin(app, config['languages'], config['languages'][0][0], "lang")
+#app = I18NPlugin(app, config['languages'], config['languages'][0][0], 'lang')
+app = I18NPlugin(app=app, langs=config['languages'], default_locale=config['languages'][0][0], locale_dir='lang')
 app = SessionMiddleware(app, SESSION)
 
 logging.basicConfig(level=logging.INFO)
@@ -49,21 +50,21 @@ logging.basicConfig(level=logging.INFO)
 def deepzoom(url):
     url = urllib.unquote(url.strip())
     key = hashlib.sha256(url).hexdigest()
-    name = "static/tmp/" + key
-    if not os.path.exists(name + "_files"):
-        urllib.urlretrieve(source, "%s.jpg" % name)
-        image = Vips.Image.new_from_file("%s.jpg" % name)
-        image.dzsave(name, layout="dz")
-    return "%s.dzi" % key
+    name = 'static/tmp/' + key
+    if not os.path.exists(name + '_files'):
+        urllib.urlretrieve(source, '%s.jpg' % name)
+        image = Vips.Image.new_from_file('%s.jpg' % name)
+        image.dzsave(name, layout='dz')
+    return '%s.dzi' % key
 
 class Form:
     @staticmethod
     def build(blueprint):
-        if blueprint['type'] == "textfield":
+        if blueprint['type'] == 'textfield':
             return [Form.Textfield(blueprint)]
-        elif blueprint['type'] == "select":
+        elif blueprint['type'] == 'select':
             return [Form.Select(blueprint)]
-        elif blueprint['type'] == "annotation":
+        elif blueprint['type'] == 'annotation':
             return [Form.Input({'type': 'text',
                                 'name': 'marked-pages',
                                 'disabled': True
@@ -72,8 +73,8 @@ class Form:
                     Form.Button({'name': 'mark-page'}),
                     Form.Button({'name': 'removefabric'})
                    ]
-        elif blueprint['type'] == "multi":
-            return [Form.Row(blueprint, r) for r in range(blueprint["rows"])]
+        elif blueprint['type'] == 'multi':
+            return [Form.Row(blueprint, r) for r in range(blueprint['rows'])]
         else:
             return [Form.Input(blueprint)]
 
@@ -82,7 +83,7 @@ class Form:
         def __init__(self, blueprint):
             self.name = blueprint['name']
             self.text = self.name
-            self.type = "button"
+            self.type = 'button'
 
         def tohtml(self):
             s = "<button id='%s' name='%s'>%s</button>" % (
@@ -98,17 +99,17 @@ class Form:
             self.helptext = blueprint.get('help')
 
         def tohtml(self, label=True):
-            s = ""
+            s = ''
             if label:
-                s += "<label>%s</label>\n" % _(self.text)
+                s += '<label>%s</label>\n' % _(self.text)
             s += "<select name='%s'>" % self.name
             for option in self.options:
-                s += "<option>%s</option>" % option
-            s += "</select>"
+                s += '<option>%s</option>' % option
+            s += '</select>'
             if self.helptext:
               s += "<a class=help title='%s'>" % _(self.helptext)
               s += "<img src='/static/images/help.png'>"
-              s += "</a>"
+              s += '</a>'
             return s
 
     class Input:
@@ -292,7 +293,7 @@ class Entry:
         db.execute(query, [self.id])
         if 'annotation' in entry:
             pages = json.loads(entry['annotation'])
-            for page, marks in pages.iteritems():
+            for page, marks in pages.items():
                 self.project.addmarkings(db, self.id, uid, page, marks)
         now = str(datetime.datetime.now())
         query = "UPDATE entries SET data = ?, updated = ? WHERE id = ?"
@@ -355,7 +356,7 @@ class Project:
         id = str(uuid.uuid4())
         if 'annotation' in entry and entry['annotation']:
             pages = json.loads(entry['annotation'])
-            for page, marks in pages.iteritems():
+            for page, marks in pages.items():
                 self.addmarkings(db, id, uid, page, marks)
         now = str(datetime.datetime.now())
         query = """INSERT INTO
@@ -384,7 +385,7 @@ def url(*args, **kw):
 def query(raw, limitto=None):
     if limitto:
         params = {}
-        for k, v in raw.iteritems():
+        for k, v in raw.items():
             if k in limitto: params[k] = v
     else:
         params = raw
@@ -591,5 +592,5 @@ def oauthorize(key):
     redirect(path("/"))
 
 if __name__ == "__main__":
-    run(app, server="gunicorn", host="0.0.0.0", port=8080)
+    run(app, server="gunicorn", host="0.0.0.0", port=80)
 

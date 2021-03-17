@@ -7,3 +7,5 @@ auth/register.json
 config.yaml
 *~
 *.pdf
+.idea
+*.po

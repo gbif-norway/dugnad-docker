@@ -19,7 +19,7 @@
   % if sort:
   <form method=get>
     <input type=hidden name=view value=map>
-    % for term, values in sort.iteritems():
+    % for term, values in sort.items():
     % if values:
     <select name="{{term}}">
       <option value="">-- {{_(term)}} --</option>
